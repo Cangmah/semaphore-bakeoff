@@ -37,25 +37,31 @@ sem_t butter_sem;
 typedef struct {
     char *name; //name of recipe
     sem_t **ingredients; //array of pointers to the semaphores/ingredients
+    int *inFridge; //pointer to location of each ingredients, 1 = fridge, 0=pantry
     int numIngredients; 
 } Recipe;
 
 //create struct instances of the 5 recipes and their ingredients using array pointer for ingredients
+//create an array to identify the location of each ingredients, 0 = pantry, 1 = fridge
 sem_t *cookieIngredients[] = {&flour_sem, &sugar_sem, &milk_sem, &butter_sem};
-Recipe cookies = {"Cookies", cookieIngredients, 4};
+int cookieLocation[] = {0, 0, 1, 1};
+Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, 4};
 
 sem_t *pancakeIngredients[] = {&flour_sem, &sugar_sem, &soda_sem, &salt_sem, &egg_sem, &milk_sem, &butter_sem};
-Recipe pancakes = {"Pancakes", pancakeIngredients, 7};
+int pancakeLocation[] = {0, 0, 0, 0, 1, 1, 1};
+Recipe pancakes = {"Pancakes", pancakeIngredients, pancakeLocation, 7};
 
 sem_t *pizzaIngredients[] = {&yeast_sem, &sugar_sem, &salt_sem};
-Recipe pizza = {"Pizza Dough", pizzaIngredients, 3};
+int pizzaLocation[] = {0, 0, 0};
+Recipe pizza = {"Pizza Dough", pizzaIngredients, pizzaLocation, 3};
 
 sem_t *pretzelIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &yeast_sem, &soda_sem, &egg_sem};
-Recipe pretzel = {"Soft Pretzels", pretzelIngredients, 6};
+int pretzelLocation[] = {0, 0, 0, 0, 0, 1};
+Recipe pretzel = {"Soft Pretzels", pretzelIngredients, pretzelLocation, 6};
 
 sem_t *cinnRollIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &butter_sem, &egg_sem, &cinn_sem};
-Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, 6};
-
+int cinnLocation[] = {0, 0, 0, 1, 1, 0};
+Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, cinnLocation, 6};
 
     //function for each baker as thread
 void *baker(void *arg) {
@@ -65,6 +71,12 @@ void *baker(void *arg) {
 
     //declare the array of the 5 recipes
     Recipe recipes[] = {cookies, pancakes, pizza, pretzel, cinnRoll};
+
+    //loop through each recipes to bake 
+    for (int i = 0; i < 5; i++) {
+        printf("Baker %d is making %s\n", id, recipes[i].name);
+
+    }
 
     return NULL;
 }
