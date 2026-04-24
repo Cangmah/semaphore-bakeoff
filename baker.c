@@ -47,12 +47,12 @@ typedef struct {
 sem_t *cookieIngredients[] = {&flour_sem, &sugar_sem, &milk_sem, &butter_sem};
 int cookieLocation[] = {0, 0, 1, 1};
 char *cookieNames[] = {"Flour", "Sugar", "Milk", "Butter"};
-Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, 4};
+Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, cookieNames, 4};
 
 sem_t *pancakeIngredients[] = {&flour_sem, &sugar_sem, &soda_sem, &salt_sem, &egg_sem, &milk_sem, &butter_sem};
 int pancakeLocation[] = {0, 0, 0, 0, 1, 1, 1};
 char *pancakeNames[]= {"Flour", "Sugar", "Baking Soda", "Salt", "Egg", "Milk", "Butter"};
-Recipe pancakes = {"Pancakes", pancakeIngredients, pancakeLocation, pancakeNames 7};
+Recipe pancakes = {"Pancakes", pancakeIngredients, pancakeLocation, pancakeNames, 7};
 
 sem_t *pizzaIngredients[] = {&yeast_sem, &sugar_sem, &salt_sem};
 int pizzaLocation[] = {0, 0, 0};
@@ -85,16 +85,43 @@ void *baker(void *arg) {
         //loop through each ingredient in a recipe
         for (int j = 0; j < recipes[i].numIngredients; j++)
         {
-            //check if ingredient is in fridge or pantry, call appropriate sem_wait()
-            if(recipes[i].inFridge[j] == 1) {sem_wait(&fridge_sem);} //uses fridge
-            else{sem_wait(&pantry_sem);} //using pantry
-
-            //then grabwait() the ingredient from the struct Recipe struct pointer to ingredients
+            //check if ingredient is in fridge or pantry, store the value in *room and wait()
+            sem_t *room = (recipes[i].inFridge[j] == 1) ? &fridge_sem : &pantry_sem;
+            sem_wait(room);
+            //then grab/wait() the ingredient from the struct Recipe struct pointer to ingredients
             sem_wait(recipes[i].ingredients[j]);
+            //print progress
             printf("Baker %d is grabbing %s\n", id, recipes[i].ingredientNames[j]);
+            //release the ingredient and its location
+            sem_post(recipes[i].ingredients[j]);
+            sem_post(room); //release the room
         }
-        
+
+        //get the bowl, spoon, and mixer
+        sem_wait(&bowl_sem);
+        printf("Baker %d grabs the bowl\n", id);
+        sem_wait(&spoon_sem);
+        printf("Baker %d grabs the spoon\n", id);
+        sem_wait(&mixer_sem);
+        printf("Baker %d grabs the mixer\n", id);
+        printf("Baker %d is now mixing %s\n", id, recipes[i].name); 
+
+        //release the bowl, spoon and mixer 
+        sem_post(&mixer_sem);
+        sem_post(&spoon_sem);
+        sem_post(&bowl_sem);
+
+        //oven thruuuuu
+        sem_wait(&oven_sem);
+        printf("Baker %d throws %s in the oven!\n", id, recipes[i].name);
+        sem_post(&oven_sem); //release oven
+
+        //this recipe finished
+        printf("Baker %d has finished baking %s!\n", id, recipes[i].name);
     }
+
+    //finished all recipes by baker
+    printf("Baker %d has completed all recipes!\n", id);
 
     return NULL;
 }
