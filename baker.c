@@ -38,6 +38,7 @@ typedef struct {
     char *name; //name of recipe
     sem_t **ingredients; //array of pointers to the semaphores/ingredients
     int *inFridge; //pointer to location of each ingredients, 1 = fridge, 0=pantry
+    char **ingredientNames; //pointer to pointer of strings of ingredients names
     int numIngredients; 
 } Recipe;
 
@@ -45,23 +46,28 @@ typedef struct {
 //create an array to identify the location of each ingredients, 0 = pantry, 1 = fridge
 sem_t *cookieIngredients[] = {&flour_sem, &sugar_sem, &milk_sem, &butter_sem};
 int cookieLocation[] = {0, 0, 1, 1};
+char *cookieNames[] = {"Flour", "Sugar", "Milk", "Butter"};
 Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, 4};
 
 sem_t *pancakeIngredients[] = {&flour_sem, &sugar_sem, &soda_sem, &salt_sem, &egg_sem, &milk_sem, &butter_sem};
 int pancakeLocation[] = {0, 0, 0, 0, 1, 1, 1};
-Recipe pancakes = {"Pancakes", pancakeIngredients, pancakeLocation, 7};
+char *pancakeNames[]= {"Flour", "Sugar", "Baking Soda", "Salt", "Egg", "Milk", "Butter"};
+Recipe pancakes = {"Pancakes", pancakeIngredients, pancakeLocation, pancakeNames 7};
 
 sem_t *pizzaIngredients[] = {&yeast_sem, &sugar_sem, &salt_sem};
 int pizzaLocation[] = {0, 0, 0};
-Recipe pizza = {"Pizza Dough", pizzaIngredients, pizzaLocation, 3};
+char *pizzaNames[] = {"Yeast", "Sugar", "Salt"};
+Recipe pizza = {"Pizza Dough", pizzaIngredients, pizzaLocation, pizzaNames, 3};
 
 sem_t *pretzelIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &yeast_sem, &soda_sem, &egg_sem};
 int pretzelLocation[] = {0, 0, 0, 0, 0, 1};
-Recipe pretzel = {"Soft Pretzels", pretzelIngredients, pretzelLocation, 6};
+char *pretzelNames[]= {"Flour", "Sugar", "Salt", "Yeast", "Baking Soda", "Egg"};
+Recipe pretzel = {"Soft Pretzels", pretzelIngredients, pretzelLocation, pretzelNames, 6};
 
 sem_t *cinnRollIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &butter_sem, &egg_sem, &cinn_sem};
 int cinnLocation[] = {0, 0, 0, 1, 1, 0};
-Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, cinnLocation, 6};
+char *cinnNames[] = {"Flour", "Sugar", "Salt", "Butter", "Egg", "Cinnamon"};
+Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, cinnLocation, cinnNames, 6};
 
     //function for each baker as thread
 void *baker(void *arg) {
@@ -76,6 +82,18 @@ void *baker(void *arg) {
     for (int i = 0; i < 5; i++) {
         printf("Baker %d is making %s\n", id, recipes[i].name);
 
+        //loop through each ingredient in a recipe
+        for (int j = 0; j < recipes[i].numIngredients; j++)
+        {
+            //check if ingredient is in fridge or pantry, call appropriate sem_wait()
+            if(recipes[i].inFridge[j] == 1) {sem_wait(&fridge_sem);} //uses fridge
+            else{sem_wait(&pantry_sem);} //using pantry
+
+            //then grabwait() the ingredient from the struct Recipe struct pointer to ingredients
+            sem_wait(recipes[i].ingredients[j]);
+            printf("Baker %d is grabbing %s\n", id, recipes[i].ingredientNames[j]);
+        }
+        
     }
 
     return NULL;
