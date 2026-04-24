@@ -31,12 +31,20 @@ sem_t butter_sem;
     // 3. spawn baker threads
     // 4. wait for threads to finish
     // 5. destroy semaphores
+
+    //function for each baker as thread
+void *baker(void *arg) {
+
+    return NULL;
+}
 int main() {
     //get user input for number of bakers 
     int numBakers;
     printf("Enter the number of bakers: ");
     scanf("%d", &numBakers);
 
+    //create list of bakers' threadIDs
+    pthread_t threads[numBakers]; 
     //init all semaphores thats been declared using their address
     sem_init(&mixer_sem,  0, 2);
     sem_init(&pantry_sem, 0, 1);
@@ -55,4 +63,34 @@ int main() {
     sem_init(&egg_sem,    0, 1);
     sem_init(&milk_sem,   0, 1);
     sem_init(&butter_sem, 0, 1);
+
+    //creating the threads for each baker 
+    for(int i = 0; i < numBakers; i++) {
+        pthread_create(&threads[i], NULL, baker, NULL );
+
+    }
+
+    //wait for all threads/bakers to complete via join()
+    for (int i = 0; i< numBakers; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    //destroy all the semaphores after threads are complete
+    sem_destroy(&mixer_sem);
+    sem_destroy(&pantry_sem);
+    sem_destroy(&fridge_sem);
+    sem_destroy(&bowl_sem);
+    sem_destroy(&spoon_sem);
+    sem_destroy(&oven_sem);
+
+    sem_destroy(&sugar_sem);
+    sem_destroy(&flour_sem);
+    sem_destroy(&yeast_sem);
+    sem_destroy(&soda_sem);
+    sem_destroy(&salt_sem);
+    sem_destroy(&cinn_sem);
+
+    sem_destroy(&egg_sem);
+    sem_destroy(&milk_sem);
+    sem_destroy(&butter_sem);
 }
