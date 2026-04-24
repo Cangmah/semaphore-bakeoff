@@ -43,11 +43,12 @@ typedef struct {
 } Recipe;
 
 //create struct instances of the 5 recipes and their ingredients using array pointer for ingredients
-//create an array to identify the location of each ingredients, 0 = pantry, 1 = fridge
+//create int array to identify the location of each ingredients, 0 = pantry, 1 = fridge
+//create char array pointer to store names of ingredients 
 sem_t *cookieIngredients[] = {&flour_sem, &sugar_sem, &milk_sem, &butter_sem};
-int cookieLocation[] = {0, 0, 1, 1};
-char *cookieNames[] = {"Flour", "Sugar", "Milk", "Butter"};
-Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, cookieNames, 4};
+int cookieLocation[] = {0, 0, 1, 1}; //index relative to ingredients' list
+char *cookieNames[] = {"Flour", "Sugar", "Milk", "Butter"}; //index relative to ingredient list
+Recipe cookies = {"Cookies", cookieIngredients, cookieLocation, cookieNames, 4}; //Recipe struct instance 
 
 sem_t *pancakeIngredients[] = {&flour_sem, &sugar_sem, &soda_sem, &salt_sem, &egg_sem, &milk_sem, &butter_sem};
 int pancakeLocation[] = {0, 0, 0, 0, 1, 1, 1};
@@ -82,7 +83,7 @@ void *baker(void *arg) {
     for (int i = 0; i < 5; i++) {
         printf("Baker %d is making %s\n", id, recipes[i].name);
 
-        //loop through each ingredient in a recipe
+        //loop through each ingredient in a recipe, get the ingredient and release 
         for (int j = 0; j < recipes[i].numIngredients; j++)
         {
             //check if ingredient is in fridge or pantry, store the value in *room and wait()
