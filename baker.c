@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+//global variables for all the semaphores 
 //resources and ingredients declarations 
 sem_t mixer_sem; 
 sem_t pantry_sem;
@@ -31,9 +32,39 @@ sem_t butter_sem;
     // 3. spawn baker threads
     // 4. wait for threads to finish
     // 5. destroy semaphores
+//create a struct to store 5 recipes for baker() to use
+//each recipes points to a pointer for array of ingredients
+typedef struct {
+    char *name; //name of recipe
+    sem_t **ingredients; //array of pointers to the semaphores/ingredients
+    int numIngredients; 
+} Recipe;
+
+//create struct instances of the 5 recipes and their ingredients using array pointer for ingredients
+sem_t *cookieIngredients[] = {&flour_sem, &sugar_sem, &milk_sem, &butter_sem};
+Recipe cookies = {"Cookies", cookieIngredients, 4};
+
+sem_t *pancakeIngredients[] = {&flour_sem, &sugar_sem, &soda_sem, &salt_sem, &egg_sem, &milk_sem, &butter_sem};
+Recipe pancakes = {"Pancakes", pancakeIngredients, 7};
+
+sem_t *pizzaIngredients[] = {&yeast_sem, &sugar_sem, &salt_sem};
+Recipe pizza = {"Pizza Dough", pizzaIngredients, 3};
+
+sem_t *pretzelIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &yeast_sem, &soda_sem, &egg_sem};
+Recipe pretzel = {"Soft Pretzels", pretzelIngredients, 6};
+
+sem_t *cinnRollIngredients[] = {&flour_sem, &sugar_sem, &salt_sem, &butter_sem, &egg_sem, &cinn_sem};
+Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, 6};
+
 
     //function for each baker as thread
 void *baker(void *arg) {
+    //cast and dereference int pointer argument to get the value of id
+    int id = *(int *)arg; 
+    free(arg); 
+
+    //declare the array of the 5 recipes
+    Recipe recipes[] = {cookies, pancakes, pizza, pretzel, cinnRoll};
 
     return NULL;
 }
@@ -66,8 +97,11 @@ int main() {
 
     //creating the threads for each baker 
     for(int i = 0; i < numBakers; i++) {
-        pthread_create(&threads[i], NULL, baker, NULL );
-
+        //create unique id for each thread to identify by baker()
+        int *id = malloc(sizeof(int)); //allocate memory for each id
+        *id = i; //store current baker value to id 
+        //create thread for each baker from list, and passed baker's id pointer to baker() func
+        pthread_create(&threads[i], NULL, baker, id );
     }
 
     //wait for all threads/bakers to complete via join()
