@@ -3,6 +3,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 
 //global variables for all the semaphores 
 //resources and ingredients declarations 
@@ -81,8 +82,8 @@ void *baker(void *arg) {
 
     //loop through each recipes to bake 
     for (int i = 0; i < 5; i++) {
+        restart: //restart this current recipe if Ramsied
         printf("Baker %d is making %s\n", id, recipes[i].name);
-
         //loop through each ingredient in a recipe, get the ingredient and release 
         for (int j = 0; j < recipes[i].numIngredients; j++)
         {
@@ -107,6 +108,16 @@ void *baker(void *arg) {
         printf("Baker %d grabs the mixer\n", id);
         printf("Baker %d is now mixing %s\n", id, recipes[i].name); 
 
+        //check if baker 0 will get Ramsied or not (1 or 0)
+        //if Ramsied(1), then reset recipe without going to oven
+        if(id == 0 && rand() %2 ==1) {
+            printf("Baker 0 got Ramsied! Restarting %s recipe now!\n", recipes[i].name);
+            sem_post(&mixer_sem);
+            sem_post(&spoon_sem);
+            sem_post(&bowl_sem);
+            goto restart;
+            
+        }
         //release the bowl, spoon and mixer 
         sem_post(&mixer_sem);
         sem_post(&spoon_sem);
@@ -131,6 +142,9 @@ int main() {
     int numBakers;
     printf("Enter the number of bakers: ");
     scanf("%d", &numBakers);
+
+    //generate randomness for a baker to be Ramsied using time
+    srand(time(NULL)); 
 
     //create list of bakers' threadIDs
     pthread_t threads[numBakers]; 
