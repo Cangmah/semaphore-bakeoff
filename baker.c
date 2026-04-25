@@ -39,12 +39,12 @@ typedef struct {
 
 //color code for each baker, up to 6 in the array
 char *colors[] = {
-    "\033[31m",  // red
-    "\033[32m",  // green
-    "\033[33m",  // yellow
-    "\033[34m",  // blue
-    "\033[35m",  // magenta
-    "\033[36m",  // cyan
+    "\033[1;31m",   // bold red
+    "\033[1;36m",   // bold cyan
+    "\033[1;35m",   // bold magenta
+    "\033[1;33m",   // bold yellow
+    "\033[1;34m",   // bold blue
+    "\033[1;32m",   // bold green
 };
 //reset the color to default after every printf
 char *reset = "\033[0m";
@@ -115,11 +115,11 @@ void *baker(void *arg) {
         printf("%sBaker %d grabs the mixer%s\n", colors[id%6], id, reset);
         printf("%sBaker %d is now mixing %s%s\n", colors[id%6],  id, recipes[i].name, reset); 
 
-        //check if baker 0 will get Ramsied or not (1 or 0)
+        //check if baker 1 will get Ramsied or not (1 or 0)
         //if Ramsied(1), then reset recipe without going to oven(goto restart)
         //since baker holds and releases ingredients right away, the only semaphors
         //needing to be released if Ramsied is the mixer, spoon and bowl
-        if(id == 0 && rand() %2 ==1) {
+        if(id == 1 && rand() % 3 == 0) {
             printf("%sBaker 0 got Ramsied! Restarting %s recipe now!%s\n", colors[id%6], recipes[i].name, reset);
             sem_post(&mixer_sem);
             sem_post(&spoon_sem);
@@ -146,6 +146,7 @@ void *baker(void *arg) {
 
     return NULL;
 }
+
 int main() {
     //get user input for number of bakers 
     int numBakers;
