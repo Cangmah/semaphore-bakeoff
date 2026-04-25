@@ -120,7 +120,7 @@ void *baker(void *arg) {
         //since baker holds and releases ingredients right away, the only semaphors
         //needing to be released if Ramsied is the mixer, spoon and bowl
         if(id == 1 && rand() % 3 == 0) {
-            printf("%sBaker 0 got Ramsied! Restarting %s recipe now!%s\n", colors[id%6], recipes[i].name, reset);
+            printf("%sBaker 1 got Ramsied! Restarting %s recipe now!%s\n", colors[id%6], recipes[i].name, reset);
             sem_post(&mixer_sem);
             sem_post(&spoon_sem);
             sem_post(&bowl_sem);
