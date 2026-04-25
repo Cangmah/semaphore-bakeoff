@@ -27,12 +27,6 @@ sem_t egg_sem;
 sem_t milk_sem; 
 sem_t butter_sem;
 
-    //main()
-    // 1. get number of bakers from user
-    // 2. initialize ALL semaphores 
-    // 3. spawn baker threads
-    // 4. wait for threads to finish
-    // 5. destroy semaphores
 //create a struct to store 5 recipes for baker() to use
 //each recipes points to a pointer for array of ingredients
 typedef struct {
@@ -42,6 +36,18 @@ typedef struct {
     char **ingredientNames; //pointer to pointer of strings of ingredients names
     int numIngredients; 
 } Recipe;
+
+//color code for each baker, up to 6 in the array
+char *colors[] = {
+    "\033[31m",  // red
+    "\033[32m",  // green
+    "\033[33m",  // yellow
+    "\033[34m",  // blue
+    "\033[35m",  // magenta
+    "\033[36m",  // cyan
+};
+//reset the color to default after every printf
+char *reset = "\033[0m";
 
 //create struct instances of the 5 recipes and their ingredients using array pointer for ingredients
 //create int array to identify the location of each ingredients, 0 = pantry, 1 = fridge
@@ -71,7 +77,7 @@ int cinnLocation[] = {0, 0, 0, 1, 1, 0};
 char *cinnNames[] = {"Flour", "Sugar", "Salt", "Butter", "Egg", "Cinnamon"};
 Recipe cinnRoll = {"Cinnamon Rolls", cinnRollIngredients, cinnLocation, cinnNames, 6};
 
-    //function for each baker as thread
+//function for each baker as thread
 void *baker(void *arg) {
     //cast and dereference int pointer argument to get the value of id
     int id = *(int *)arg; 
@@ -83,7 +89,8 @@ void *baker(void *arg) {
     //loop through each recipes to bake 
     for (int i = 0; i < 5; i++) {
         restart: //restart this current recipe if Ramsied
-        printf("Baker %d is making %s\n", id, recipes[i].name);
+        //use colors[id %6] to assign a baker with unique color from colors array
+        printf("%sBaker %d is making %s\n%s", colors[id % 6], id, recipes[i].name, reset);
         //loop through each ingredient in a recipe, get the ingredient and release 
         for (int j = 0; j < recipes[i].numIngredients; j++)
         {
@@ -93,7 +100,7 @@ void *baker(void *arg) {
             //then grab/wait() the ingredient from the struct Recipe struct pointer to ingredients
             sem_wait(recipes[i].ingredients[j]);
             //print progress
-            printf("Baker %d is grabbing %s\n", id, recipes[i].ingredientNames[j]);
+            printf("%sBaker %d is grabbing %s%s\n",colors[id %6], id, recipes[i].ingredientNames[j], reset);
             //release the ingredient and its location
             sem_post(recipes[i].ingredients[j]);
             sem_post(room); //release the room
@@ -101,17 +108,19 @@ void *baker(void *arg) {
 
         //get the bowl, spoon, and mixer
         sem_wait(&bowl_sem);
-        printf("Baker %d grabs the bowl\n", id);
+        printf("%sBaker %d grabs the bowl%s\n",colors[id%6], id,reset);
         sem_wait(&spoon_sem);
-        printf("Baker %d grabs the spoon\n", id);
+        printf("%sBaker %d grabs the spoon%s\n", colors[id%6],id, reset);
         sem_wait(&mixer_sem);
-        printf("Baker %d grabs the mixer\n", id);
-        printf("Baker %d is now mixing %s\n", id, recipes[i].name); 
+        printf("%sBaker %d grabs the mixer%s\n", colors[id%6], id, reset);
+        printf("%sBaker %d is now mixing %s%s\n", colors[id%6],  id, recipes[i].name, reset); 
 
         //check if baker 0 will get Ramsied or not (1 or 0)
-        //if Ramsied(1), then reset recipe without going to oven
+        //if Ramsied(1), then reset recipe without going to oven(goto restart)
+        //since baker holds and releases ingredients right away, the only semaphors
+        //needing to be released if Ramsied is the mixer, spoon and bowl
         if(id == 0 && rand() %2 ==1) {
-            printf("Baker 0 got Ramsied! Restarting %s recipe now!\n", recipes[i].name);
+            printf("%sBaker 0 got Ramsied! Restarting %s recipe now!%s\n", colors[id%6], recipes[i].name, reset);
             sem_post(&mixer_sem);
             sem_post(&spoon_sem);
             sem_post(&bowl_sem);
@@ -125,15 +134,15 @@ void *baker(void *arg) {
 
         //oven thruuuuu
         sem_wait(&oven_sem);
-        printf("Baker %d throws %s in the oven!\n", id, recipes[i].name);
+        printf("%sBaker %d throws %s in the oven!%s\n", colors[id%6], id, recipes[i].name, reset);
         sem_post(&oven_sem); //release oven
 
         //this recipe finished
-        printf("Baker %d has finished baking %s!\n", id, recipes[i].name);
+        printf("%sBaker %d has finished baking %s!%s\n", colors[id%6], id, recipes[i].name, reset);
     }
 
     //finished all recipes by baker
-    printf("Baker %d has completed all recipes!\n", id);
+    printf("%sBaker %d has completed all recipes!%s\n", colors[id%6], id, reset);
 
     return NULL;
 }
